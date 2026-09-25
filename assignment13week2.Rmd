@@ -83,7 +83,7 @@ Of the 44 movies with a female director, 10 have a runtime of 120 minutes or mor
 
 Question 3a
 ```{r}
-# PR = revenue / budget ??!! same as in week 1 , 3d?
+# PR = revenue / budget (same as in week 1 , 3d)
 #movies with budget 0 or revenue 0 are taken out, because the answer is not meaningful
 movies_pr <- movies %>%
   filter(budget > 0, revenue > 0) %>%
