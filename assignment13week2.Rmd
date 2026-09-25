@@ -1,0 +1,141 @@
+---
+title: "assignment13 week 2"
+output: html_document
+---
+```{r}
+library(tidyverse)
+movies <- read_tsv("movies1.tsv")
+#director_gender is a categorical variable, so we have to change it to a factor.
+movies <- movies %>%
+  mutate(director_gender = factor(director_gender))
+
+#question 1
+glimpse(movies)
+movies %>%
+  summarize(n_movies = n(),
+            min_index = min(index),
+            max_index = max(index),
+            first_year = min(release_year),
+            last_year = max(release_year))
+movies %>%
+  count(original_language) %>%
+  arrange(desc(n))
+```
+The dataset is a sample, not the full population, because it has 505 movies, but the index column goes up to 4796 movies. the variables match the TMDB movie dataset, so our file is a subset of the full movie database. The full population would be all movies in that TMDB dataset. to be more clear, it is feature films from between 1990 to 2016 that are listed on TMDB. TMDB does not contain every movie ever made, so outcomes from this sample only hold for that kind of movies.
+
+Question 2a
+```{r}
+fct_count(movies$director_gender)
+gender_probs <- movies %>%
+  filter(!is.na(director_gender)) %>%
+  summarize(P_M = mean(director_gender == "male"),
+P_M_not = 1 - P_M)
+gender_probs
+```
+If we leave out the 35 movies where the director's gender is unknown (NA), then: P(M) = 0.906
+P_M_not is the complement of P(M), which is the event when the director is not a male. P(M') = 0.094 (1 - 0.906 = 0.094)
+
+question 2b
+```{r}
+p_normal <- pnorm(120, mean = 107, sd = 22) - pnorm(90, mean = 107, sd = 22)
+p_normal 
+#P(90 <= R <= 120) = 0.503
+```
+question 2C
+```{r}
+movies %>%
+  filter(!is.na(runtime)) %>%
+  summarize(p_empirical = mean(runtime >= 90 & runtime <= 120),
+mean = mean(runtime),
+sd = sd(runtime),
+median = median(runtime),
+max = max(runtime))
+```
+
+P_empirical(R)= 0.623, while the normal model in 2b gave 0,503. Thus the model underestimates this probability by about 12 percentage points.
+The values of the mean of 107 and the standard deviation of 22 are accurate, because the sample mean is 107 and the sample standard deviation is 22. The assumption we consider the most suspect is that R is normally distributed, while is is actually skewed to the right. The median is 103, which is lower than the mean of 107 and there are a few very long movies, while most movies are between 90 and 120 minutes. These movies make the standard deviation bigger, so 
+the normal curve is too wide and therefor gives too little probability in the 90-120 range where most movies actually are.
+Question 2d
+```{r}
+#movies with female director
+movies_gender <- movies %>%
+  filter(!is.na(director_gender))
+P_M_not <- mean(movies_gender$director_gender == "female")
+P_M_not
+```
+p(M') = 0.094
+
+```{r}
+#female directo and runtime of at least 120
+P_R120_and_M_not <- mean(movies_gender$director_gender == "female" & movies_gender$runtime >= 120)
+P_R120_and_M_not
+```
+P(R <= 120 and M') = 0.021
+
+```{r}
+#conditional probability
+P_R120_given_M_not <- P_R120_and_M_not / P_M_not
+P_R120_given_M_not
+```
+P(120<=R | M') = 0.227
+
+Of the 44 movies with a female director, 10 have a runtime of 120 minutes or more. 10/44 = 0.227. This is the same as calculated in steo c above. So about 23% of the movies directed by women are at least two hours long.
+
+Question 3a
+```{r}
+# PR = revenue / budget ??!! same as in week 1 , 3d?
+#movies with budget 0 or revenue 0 are taken out, because the answer is not meaningful
+movies_pr <- movies %>%
+  filter(budget > 0, revenue > 0) %>%
+  mutate (PR = revenue / budget)
+mean(movies_pr$PR)
+```
+
+The mean of PR in the data set is 5.37
+
+Question 3b
+```{r}
+set.seed(123)
+movies_sample <- movies_pr %>%
+  slice_sample(n = 25)
+mean(movies_sample$PR)
+```
+
+The mean of the PR in this random sample of 25 movies is 2.77. this is much lower than the population mean of 5.37 from 3a. The sample mean is not exactly the population mean, because each sample has different movies. The difference is big, because PR has a few extreme outliers that pull up the population mean a lot, but the sample mean does not include them.
+
+Question 3c
+```{r}
+sample_means <- c()
+for (i in 1:100) {
+  movies_sample <- movies_pr %>%
+    slice_sample(n = 25)
+  sample_means[i] <- mean(movies_sample$PR)
+}
+sample_means
+```
+
+question 3d
+```{r}
+summary(sample_means)
+```
+```{r}
+sd(sample_means)
+```
+```{r}
+ggplot(tibble(sample_means), aes(x = sample_means)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Histogram of 100 sample means of PR (n = 25)",
+       x = "Sample mean of PR", y = "Count")
+```
+The mean of the 100 sample means is 5.12 and their standard deviation is 4.45. the distribution is skewed to the right. Most sample means are between about 3 and 4.5, but a few samples that happen to contain one of the extreme PR outliers have a much higher mean (up to 21.5).
+
+Question 3e
+```{r}
+mu <- mean(movies_pr$PR)
+sigma <- sd(movies_pr$PR)
+#mu = 5.3708
+sigma / sqrt(25)
+```
+Following the Central Limit Theorem, the sample mean of PR in a sample of n = 25 movies is approximately normally distributed: is N(5.37, 5.04).
+So the expected value is 5.37 and the standard deviation is 5.04.
+Comparing this with question 3d gives that the mean of our 100 sample means of 5.12 is close to the expected value of 5.37 and the standard deviation is somewhat lower than 5.04, but the shape does not match. The CLY says the distribution should be approximately normal, but the histogram is skewed to the right. The PR is very skewed with some huge outliers, so the sample size of 25 is too small for the CLT approximation to work well.
