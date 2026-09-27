@@ -1,7 +1,7 @@
 ---
 title: "QRM II Graded Assignment (13)"
 subtitle: "Period 1, 2026"
-author: "Fill in your group number and names here"
+author: "Group 28, Merlijn Haster, Daphne Veldhuizen, Milan Kroes, Norah Aalders, Julian Zeguers"
 date:  "`r format(Sys.Date(), '%d-%m-%Y')`"
 output:
   pdf_document:
@@ -64,6 +64,9 @@ Each week consists of 1, 2, or 3 subquestions. The total amount of points you ca
 
 ```{r}
 #WRITE YOUR CODE HERE
+observations: nrow(movies1) * ncol(movies1)
+variables: nrow(movies1)
+subjects: ncol(movies1)
 ```
 
 **Your Answer:**
@@ -75,6 +78,10 @@ Write your response here.
 ```{r}
 #WRITE YOUR CODE HERE
 head(movies1, n=5)
+nominal: first_actor_gender
+ordinal: not present
+interval: release_date
+ratio: budget
 ```
 
 **Your Answer:**
@@ -97,7 +104,11 @@ For each step, you should provide first all the code you used to answer the ques
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+movies1$PR <- movies1$revenue / movies1$budget
+mean(movies1$PR, na.rm = TRUE)
+median(movies1$PR, na.rm = TRUE)
+max(movies1$PR, na.rm = TRUE)
+min(movies1$PR, na.rm = TRUE)
 ```
 
 **Your Answer:**
@@ -114,7 +125,7 @@ Write your formulated response here.
 
 **Your Answer:**
 
-Write your formulated response here.
+PR = revenue/budget, and some movies have budget = 0
 
 *Step c*
 
@@ -126,14 +137,18 @@ Write your formulated response here.
 
 **Your Answer:**
 
-Write your formulated response here.
+Some movies have an NA value because their revenue or budget is missing. Therefore, the PR cannot be calculated for these movies.
 
 *Step d*
 
 ```{r}
 
 #WRITE YOUR CODE HERE
-
+movies1$PR[is.infinite(movies1$PR)] <- NA
+mean(movies1$PR, na.rm = TRUE)
+median(movies1$PR, na.rm = TRUE)
+max(movies1$PR, na.rm = TRUE)
+min(movies1$PR, na.rm = TRUE)
 ```
 
 **Your Answer:**
@@ -145,31 +160,57 @@ Write your formulated response here.
 ```{r}
 
 #WRITE YOUR CODE HERE
+sum(movies1$PR >= 1, na.rm = TRUE) / sum(!is.na(movies1$PR)) * 100
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+ A PR of at least one means that the movie generates at least as much revenue as its budget.
+
 
 *Step f*
 
 ```{r}
 
 #WRITE YOUR CODE HERE
-
+.boxplot(movies1$PR,
+          main = "Boxplot of Profitability Ratio",
+          xlab = "Movies",
+          ylab = "Profitability Ratio",
+          na.rm = TRUE)
+quantile(movies1$PR, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+The boxplot is strongly right-skewed and contains several high outliers. Most movies have a relatively low PR, while a small number of movies have a very high PR.
+
 
 # Week 2 
 1 Is your dataset movies1.tsv the full population, or is it a sample of a larger population? If the latter, how would you describe the full population? \textbf{[4 points]} 
+```{r}
+library(tidyverse)
+movies <- read_tsv("movies1.tsv")
+#director_gender is a categorical variable, so we have to change it to a factor.
+movies <- movies %>%
+  mutate(director_gender = factor(director_gender))
+
+glimpse(movies)
+movies %>%
+  summarize(n_movies = n(),
+            min_index = min(index),
+            max_index = max(index),
+            first_year = min(release_year),
+            last_year = max(release_year))
+movies %>%
+  count(original_language) %>%
+  arrange(desc(n))
+```
 
 **Your Answer**
 
-Write your formulated response here.
+The dataset is a sample, not the full population, because it has 505 movies, but the index column goes up to 4796 movies. the variables match the TMDB movie dataset, so our file is a subset of the full movie database. The full population would be all movies in that TMDB dataset. to be more clear, it is feature films from between 1990 to 2016 that are listed on TMDB. TMDB does not contain every movie ever made, so outcomes from this sample only hold for that kind of movies.
 
 
 2 Let M be the event that a movie director is male. Let R be the runtime of the movie. 
@@ -183,18 +224,27 @@ d. Using your data, calculate $P(120 \leq R | M')$ \textbf{[2 points]}
 
 ```{r}
 #WRITE YOUR CODE HERE
+fct_count(movies$director_gender)
+gender_probs <- movies %>%
+  filter(!is.na(director_gender)) %>%
+  summarize(P_M = mean(director_gender == "male"),
+P_M_not = 1 - P_M)
+gender_probs
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+If we leave out the 35 movies where the director's gender is unknown (NA), then: P(M) = 0.906
+P_M_not is the complement of P(M), which is the event when the director is not a male. P(M') = 0.094 (1 - 0.906 = 0.094)
 
 *step b*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+p_normal <- pnorm(120, mean = 107, sd = 22) - pnorm(90, mean = 107, sd = 22)
+p_normal 
+#P(90 <= R <= 120) = 0.503
 ```
 
 **Your Answer:**
@@ -205,23 +255,49 @@ Write your formulated response here.
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+movies %>%
+  filter(!is.na(runtime)) %>%
+  summarize(p_empirical = mean(runtime >= 90 & runtime <= 120),
+mean = mean(runtime),
+sd = sd(runtime),
+median = median(runtime),
+max = max(runtime))
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+P_empirical(R)= 0.623, while the normal model in 2b gave 0,503. Thus the model underestimates this probability by about 12 percentage points.
+The values of the mean of 107 and the standard deviation of 22 are accurate, because the sample mean is 107 and the sample standard deviation is 22. The assumption we consider the most suspect is that R is normally distributed, while is is actually skewed to the right. The median is 103, which is lower than the mean of 107 and there are a few very long movies, while most movies are between 90 and 120 minutes. These movies make the standard deviation bigger, so 
+the normal curve is too wide and therefor gives too little probability in the 90-120 range where most movies actually are.
 
 *step d*
 
 ```{r}
 #WRITE YOUR CODE HERE
+#movies with female director
+movies_gender <- movies %>%
+  filter(!is.na(director_gender))
+P_M_not <- mean(movies_gender$director_gender == "female")
+P_M_not
 
+#female directo and runtime of at least 120
+P_R120_and_M_not <- mean(movies_gender$director_gender == "female" & movies_gender$runtime >= 120)
+P_R120_and_M_not
+
+#conditional probability
+P_R120_given_M_not <- P_R120_and_M_not / P_M_not
+P_R120_given_M_not
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+p(M') = 0.094
+
+P(R <= 120 and M') = 0.021
+
+P(120<=R | M') = 0.227
+
+Of the 44 movies with a female director, 10 have a runtime of 120 minutes or more. 10/44 = 0.227. This is the same as calculated in steo c above. So about 23% of the movies directed by women are at least two hours long.
 
 3 For this question, you will again use the profitability ratio PR. Make sure that PR is defined the same way as in question 3d of week 1. For this question, you will assume that your data set is the full population.  
 
@@ -235,51 +311,84 @@ e. Using the formulas of the *Central Limit Theorem*, give the distribution of t
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+# PR = revenue / budget (same as in week 1 , 3d)
+#movies with budget 0 or revenue 0 are taken out, because the answer is not meaningful
+movies_pr <- movies %>%
+  filter(budget > 0, revenue > 0) %>%
+  mutate (PR = revenue / budget)
+mean(movies_pr$PR)
 ```
 
 **Your Answer:**
+The mean of PR in the data set is 5.37
 
-Write your formulated response here.
 
 *step b*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+set.seed(123)
+movies_sample <- movies_pr %>%
+  slice_sample(n = 25)
+mean(movies_sample$PR)
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+The mean of the PR in this random sample of 25 movies is 2.77. this is much lower than the population mean of 5.37 from 3a. The sample mean is not exactly the population mean, because each sample has different movies. The difference is big, because PR has a few extreme outliers that pull up the population mean a lot, but the sample mean does not include them.
 
 *step c*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+sample_means <- c()
+for (i in 1:100) {
+  movies_sample <- movies_pr %>%
+    slice_sample(n = 25)
+  sample_means[i] <- mean(movies_sample$PR)
+}
+sample_means
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+
 
 *step d*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+summary(sample_means)
+```
+```{r}
+sd(sample_means)
+```
+```{r}
+ggplot(tibble(sample_means), aes(x = sample_means)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Histogram of 100 sample means of PR (n = 25)",
+       x = "Sample mean of PR", y = "Count")
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+The mean of the 100 sample means is 5.12 and their standard deviation is 4.45. the distribution is skewed to the right. Most sample means are between about 3 and 4.5, but a few samples that happen to contain one of the extreme PR outliers have a much higher mean (up to 21.5).
+
 
 *step e*
 
+```{r}
+mu <- mean(movies_pr$PR)
+sigma <- sd(movies_pr$PR)
+#mu = 5.3708
+sigma / sqrt(25)
+```
+
 **Your Answer:**
 
-Write your formulated response here.
+Following the Central Limit Theorem, the sample mean of PR in a sample of n = 25 movies is approximately normally distributed: is N(5.37, 5.04).
+So the expected value is 5.37 and the standard deviation is 5.04.
+Comparing this with question 3d gives that the mean of our 100 sample means of 5.12 is close to the expected value of 5.37 and the standard deviation is somewhat lower than 5.04, but the shape does not match. The CLY says the distribution should be approximately normal, but the histogram is skewed to the right. The PR is very skewed with some huge outliers, so the sample size of 25 is too small for the CLT approximation to work well.
 
 # Week 3 
 
@@ -293,25 +402,41 @@ b. According to IMDB, the average movie is rated with a 6.5. Using your data, te
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+thriller_movies<- movies %>%
+filter(genre== "Thriller")
+  
+view(thriller_movies)
+view(movies)
+t.test(thriller_movies$vote_average, conf.level = 0.99)
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+With a 99% confidence interval for the variable vote_average the mean lies between 5.644845 and 6.299771. 
 
 *step b*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+t.test(thriller_movies$vote_average,
+       mu = 6.5,
+       alternative = "less",
+       conf.level = 0.99)
+qt(0.01, df= 64)
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+Null hypothesis states that the true mean of x is bigger, or equal to 6.5. 
+Alternative hypothesis states that the true mean is less than 6.5
+$\alpha$ = 0.01,
+df = 64, which is more than 30, so the sampling distribution of the mean of x is approximately normal. 
+The critical t-value is -2.386037 and the calculated t-value is -4.2782.
+The calculated t-value is smaller than the critical t-value, so the null hypothesis is rejected. 
+the p-value is 0.0000321. 
+Since the calculated T-value is smaller than the critical t-value, we reject the null hypothesis and conclude there is sufficient evidence to conclude that thriller movies are not at least as good as the average movie. 
 
 2
 
@@ -325,38 +450,58 @@ d. Assume that the variance of PR for movies with a male lead actor in your data
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+movies %>%
+  count(first_actor_gender)
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+130 movies with a female lead actor, and 352 movies with a male lead actor. 23 movies with no information on the gender.
 
 *step b*
 
 ```{r}
 #WRITE YOUR CODE HERE
+movies_without_na <- movies%>%
+filter(!is.na(first_actor_gender))
+males_mvs <- sum(movies_without_na$first_actor_gender== "male")
+total_gender <- nrow(movies_without_na)
 
+prop.test(x=males_mvs, n=total_gender, p=0.5, alternative= "two.sided")
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+Null hypothesis states that for any given movie the chance for a male or female lead actor is equal, so if π = 0.5.
+Alternative hypothesis states that the chance is not equal, with  π not being 0.5.
+$\alpha$ = 0.05
+There is sufficient evidence to conclude that the chance for a male or female lead actor is not equal. The p-value is virtually zero. 
 
 
 *step c*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+movies$PR <- movies$revenue / movies$budget
+mean(movies$PR, na.rm = TRUE)
+median(movies$PR, na.rm = TRUE)
+max(movies$PR, na.rm = TRUE)
+min(movies$PR, na.rm = TRUE)
+movies_without_na <- movies%>%
+filter(!is.na(first_actor_gender), budget> 0)
+female_mvs <-  movies_without_na %>% filter(first_actor_gender=="female")
+male_mvs <- movies_without_na %>% filter(first_actor_gender=="male")
+var(male_mvs$PR, na.rm = TRUE)
+var(female_mvs$PR, na.rm = TRUE)
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+the variance of PR with a male lead is 99.82828
+the variance of pr with a female lead is 1987.742
 
 *step d*
 
@@ -382,32 +527,39 @@ d. Now, create a new data frame which is a random subsample of n=100 of your ful
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+movies <- movies %>%
+  mutate(genre2 = if_else(genre %in% c("Drama","Comedy", "Thriller" ), genre, "other"))
+movies %>% count(genre2)
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+
 
 *step b*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+scatterplot_genre2 <- movies %>% filter(is.finite(PR)) %>% group_by(genre2) %>% summarise(mean_PR = mean(PR, na.rm = TRUE))
+ggplot(scatterplot_genre2, aes(x=genre2, y=mean_PR)) + geom_point(size=1) + labs(title = "average PR per genre", x="genre",y="PR")
 
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+Thriller has the highest, Drama has the lowest.
 
 
 *step c*
 
 ```{r}
 #WRITE YOUR CODE HERE
-
+scatterplot_genre2 <- movies %>% filter(is.finite(PR)) %>% group_by(genre2) %>% summarise(mean_PR = mean(PR, na.rm = TRUE), 
+lower= t.test(PR)$conf.int[1],
+upper= t.test(PR)$conf.int[2]
+)
+ggplot(scatterplot_genre2, aes(x=genre2, y=mean_PR)) + geom_point(size=1) + geom_errorbar(aes(ymin = lower, ymax = upper),width = 0.2) + labs(title = "average PR per genre", x="genre",y="PR")
 
 ```
 

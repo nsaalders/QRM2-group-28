@@ -79,6 +79,33 @@ var(female_mvs$PR, na.rm = TRUE)
 the variance of PR with a male lead is 99.82828
 the variance of pr with a female lead is 1987.742
 
+question 2D
+```{r}
+
+```
 
 
 
+
+question 3A
+```{r}
+movies <- movies %>%
+  mutate(genre2 = if_else(genre %in% c("Drama","Comedy", "Thriller" ), genre, "other"))
+movies %>% count(genre2)
+```
+question 3B
+```{r}
+scatterplot_genre2 <- movies %>% filter(is.finite(PR)) %>% group_by(genre2) %>% summarise(mean_PR = mean(PR, na.rm = TRUE))
+ggplot(scatterplot_genre2, aes(x=genre2, y=mean_PR)) + geom_point(size=1) + labs(title = "average PR per genre", x="genre",y="PR")
+```
+Thriller has the highest, Drama has the lowest.
+
+question 3c
+```{r}
+scatterplot_genre2 <- movies %>% filter(is.finite(PR)) %>% group_by(genre2) %>% summarise(mean_PR = mean(PR, na.rm = TRUE), 
+lower= t.test(PR)$conf.int[1],
+upper= t.test(PR)$conf.int[2]
+)
+ggplot(scatterplot_genre2, aes(x=genre2, y=mean_PR)) + geom_point(size=1) + geom_errorbar(aes(ymin = lower, ymax = upper),width = 0.2) + labs(title = "average PR per genre", x="genre",y="PR")
+```
+question 3d
