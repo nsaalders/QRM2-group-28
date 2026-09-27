@@ -1,0 +1,84 @@
+---
+title: "assignment13 week 3"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+movies <- read_tsv("movies1.tsv")
+
+```
+
+Question 1A
+```{r}
+thriller_movies<- movies %>%
+filter(genre== "Thriller")
+  
+view(thriller_movies)
+view(movies)
+t.test(thriller_movies$vote_average, conf.level = 0.99)
+```
+With a 99% confidence interval for the variable vote_average the mean lies between 5.644845 and 6.299771. 
+
+
+Question 1B
+```{r}
+t.test(thriller_movies$vote_average,
+       mu = 6.5,
+       alternative = "less",
+       conf.level = 0.99)
+qt(0.01, df= 64)
+```
+Null hypothesis states that the true mean of x is bigger, or equal to 6.5. 
+Alternative hypothesis states that the true mean is less than 6.5
+$\alpha$ = 0.01,
+df = 64, which is more than 30, so the sampling distribution of the mean of x is approximately normal. 
+The critical t-value is -2.386037 and the calculated t-value is -4.2782.
+The calculated t-value is smaller than the critical t-value, so the null hypothesis is rejected. 
+the p-value is 0.0000321. 
+Since the calculated T-value is smaller than the critical t-value, we reject the null hypothesis and conclude there is sufficient evidence to conclude that thriller movies are not at least as good as the average movie. 
+
+
+Question 2a
+```{r}
+movies %>%
+  count(first_actor_gender)
+```
+130 movies with a female lead actor, and 352 movies with a male lead actor. 23 movies with no information on the gender.
+
+
+Question 2b
+```{r}
+movies_without_na <- movies%>%
+filter(!is.na(first_actor_gender))
+males_mvs <- sum(movies_without_na$first_actor_gender== "male")
+total_gender <- nrow(movies_without_na)
+
+prop.test(x=males_mvs, n=total_gender, p=0.5, alternative= "two.sided")
+```
+
+Null hypothesis states that for any given movie the chance for a male or female lead actor is equal, so if π = 0.5.
+Alternative hypothesis states that the chance is not equal, with  π not being 0.5.
+$\alpha$ = 0.05
+There is sufficient evidence to conclude that the chance for a male or female lead actor is not equal. The p-value is virtually zero. 
+
+Question 2c
+```{r}
+movies$PR <- movies$revenue / movies$budget
+mean(movies$PR, na.rm = TRUE)
+median(movies$PR, na.rm = TRUE)
+max(movies$PR, na.rm = TRUE)
+min(movies$PR, na.rm = TRUE)
+movies_without_na <- movies%>%
+filter(!is.na(first_actor_gender), budget> 0)
+female_mvs <-  movies_without_na %>% filter(first_actor_gender=="female")
+male_mvs <- movies_without_na %>% filter(first_actor_gender=="male")
+var(male_mvs$PR, na.rm = TRUE)
+var(female_mvs$PR, na.rm = TRUE)
+``` 
+the variance of PR with a male lead is 99.82828
+the variance of pr with a female lead is 1987.742
+
+
+
+
