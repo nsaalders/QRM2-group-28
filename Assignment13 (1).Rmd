@@ -1,14 +1,15 @@
 ---
 title: "QRM II Graded Assignment (13)"
-subtitle: "Period 1, 2026"
-author: "Group 28, Merlijn Haster, Daphne Veldhuizen, Milan Kroes, Norah Aalders, Julian Zeguers"
-date:  "`r format(Sys.Date(), '%d-%m-%Y')`"
+author: Group 28, Merlijn Haster, Daphne Veldhuizen, Milan Kroes, Norah Aalders, Julian
+  Zeguers
+date: "`r format(Sys.Date(), '%d-%m-%Y')`"
 output:
-  pdf_document:
-    number_sections: true
+  word_document: default
   html_document:
     df_print: paged
-
+  pdf_document:
+    number_sections: true
+subtitle: Period 1, 2026
 header-includes:
 - "\\setcounter{section}{-1}"
 - |
@@ -18,7 +19,6 @@ header-includes:
     showtabs = false,
     breaklines,
     commandchars=\\\{\}
-  }
 format:
   html:
     code-overflow: wrap
@@ -64,29 +64,33 @@ Each week consists of 1, 2, or 3 subquestions. The total amount of points you ca
 
 ```{r}
 #WRITE YOUR CODE HERE
-observations: nrow(movies1) * ncol(movies1)
-variables: nrow(movies1)
-subjects: ncol(movies1)
+library(tidyverse)
+movies <- read_tsv("movies1.tsv")
+observations<- nrow(movies) * ncol(movies)
+variables<- nrow(movies)
+subjects<- ncol(movies)
 ```
 
 **Your Answer:**
 
-Write your response here.
+observations: nrow(movies) * ncol(movies)
+variables: nrow(movies)
+subjects: ncol(movies)
 
 2. Which of the following types of variables are present in your data set? (i) nominal; (ii) ordinal; (iii); interval; (iv) ratio. If present, name one example of such a variable present in your data set.  \textbf{[4 points]} 
 
 ```{r}
 #WRITE YOUR CODE HERE
+
+```
+
+**Your Answer:**
+
 head(movies1, n=5)
 nominal: first_actor_gender
 ordinal: not present
 interval: release_date
 ratio: budget
-```
-
-**Your Answer:**
-
-rite your response here.
 
 
 3. A movie studio wants to know which types of movies are best at generating profit. The measure they use for this is the profitability ratio, which is defined as $$PR=\frac{Revenue}{Budget}.$$ Perform the following steps to provide the movie studio with an analysis which corresponds to their request:
@@ -104,16 +108,20 @@ For each step, you should provide first all the code you used to answer the ques
 
 ```{r}
 #WRITE YOUR CODE HERE
-movies1$PR <- movies1$revenue / movies1$budget
-mean(movies1$PR, na.rm = TRUE)
-median(movies1$PR, na.rm = TRUE)
-max(movies1$PR, na.rm = TRUE)
-min(movies1$PR, na.rm = TRUE)
+movies$PR <- movies$revenue / movies$budget
+mean(movies$PR, na.rm = TRUE)
+median(movies$PR, na.rm = TRUE)
+max(movies$PR, na.rm = TRUE)
+min(movies$PR, na.rm = TRUE)
 ```
 
 **Your Answer:**
 
-Write your formulated response here.
+movies$PR <- movies$revenue / movies$budget
+mean(movies$PR, na.rm = TRUE)
+median(movies$PR, na.rm = TRUE)
+max(movies$PR, na.rm = TRUE)
+min(movies$PR, na.rm = TRUE).
 
 *Step b*
 
@@ -144,11 +152,11 @@ Some movies have an NA value because their revenue or budget is missing. Therefo
 ```{r}
 
 #WRITE YOUR CODE HERE
-movies1$PR[is.infinite(movies1$PR)] <- NA
-mean(movies1$PR, na.rm = TRUE)
-median(movies1$PR, na.rm = TRUE)
-max(movies1$PR, na.rm = TRUE)
-min(movies1$PR, na.rm = TRUE)
+movies$PR[is.infinite(movies$PR)] <- NA
+mean(movies$PR, na.rm = TRUE)
+median(movies$PR, na.rm = TRUE)
+max(movies$PR, na.rm = TRUE)
+min(movies$PR, na.rm = TRUE)
 ```
 
 **Your Answer:**
@@ -160,7 +168,7 @@ Write your formulated response here.
 ```{r}
 
 #WRITE YOUR CODE HERE
-sum(movies1$PR >= 1, na.rm = TRUE) / sum(!is.na(movies1$PR)) * 100
+sum(movies$PR >= 1, na.rm = TRUE) / sum(!is.na(movies$PR)) * 100
 
 ```
 
@@ -174,12 +182,12 @@ sum(movies1$PR >= 1, na.rm = TRUE) / sum(!is.na(movies1$PR)) * 100
 ```{r}
 
 #WRITE YOUR CODE HERE
-.boxplot(movies1$PR,
+boxplot(movies$PR,
           main = "Boxplot of Profitability Ratio",
           xlab = "Movies",
           ylab = "Profitability Ratio",
           na.rm = TRUE)
-quantile(movies1$PR, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+quantile(movies$PR, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
 ```
 
 **Your Answer:**
